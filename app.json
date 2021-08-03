@@ -1,0 +1,11 @@
+{
+  "expo": {
+    "name": "gql-rn2",
+    "slug": "gql-rn2",
+    "version": "1.0.0",
+    "assetBundlePatterns": [
+      "**/*"
+    ]
+  },
+  "name": "gql-rn2"
+}
