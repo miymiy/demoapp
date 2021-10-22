@@ -2,16 +2,12 @@ import * as React from "react";
 import { NavigationStackScreenProps } from "react-navigation-stack";
 import ScreenCloseFooter from "../components/ScreenCloseFooter";
 import ScreenScrollView from "../components/ScreenScrollView";
-
-import { useQuery, useMutation } from "@apollo/client";
+import { useMutation } from "@apollo/client";
 import NavigateTo from "../components/NavigateTo";
 import { HOME_SCREEN } from "../constants/screens";
 import HomeOrderDetailView from "../components/HomeOrderDetailView";
 import { fakeDelay } from "../utils";
 import {
-  OrderQuery,
-  OrderQueryData,
-  OrderQueryVar,
   OrdersQuery,
 } from "../apollo/queries";
 import {
@@ -19,6 +15,7 @@ import {
   DeleteOrderMutation,
   DeleteOrderData,
 } from "../apollo/mutations";
+import { readOrder } from '../apollo/cacheQueries';
 
 const HomeOrderDetailsScreen = ({
   navigation,
@@ -26,16 +23,8 @@ const HomeOrderDetailsScreen = ({
   id: string;
 }>) => {
   const id = navigation.getParam("id");
-  const [submitting, setSubmitting] = React.useState(false);
-  const { data, loading } = useQuery<OrderQueryData, OrderQueryVar>(
-    OrderQuery,
-    {
-      variables: { id },
-      fetchPolicy: "cache-first",
-      nextFetchPolicy: "cache-only",
-      skip: !id,
-    }
-  );
+  const [loading, setLoading] = React.useState(false);
+  const data = readOrder(id);
   const [deleteOrder] = useMutation<DeleteOrderData, DeleteOrderInput>(
     DeleteOrderMutation,
     {
@@ -54,7 +43,7 @@ const HomeOrderDetailsScreen = ({
       onError: (e) => {
         console.log(JSON.stringify(e, null, 2));
         fakeDelay(() => {
-          setSubmitting(false);
+          setLoading(false);
         });
       },
       context: { ignoreGraphQLErrors: true, ignoreNetworkError: true },
@@ -63,29 +52,29 @@ const HomeOrderDetailsScreen = ({
   const close = () => {
     navigation.goBack();
   };
-  if (!id || (!loading && !data)) {
+  if (!id) {
     return <NavigateTo routeName={HOME_SCREEN} />;
   }
 
   return (
     <ScreenScrollView
-      loading={loading || submitting}
+      loading={loading}
       title="Order details"
       logoSrc={require("../../assets/animations/basket.json")}
       onClose={close}
       fixFooter={
         <ScreenCloseFooter
           close={() => {
-            setSubmitting(true);
+            setLoading(true);
             deleteOrder();
           }}
           text="Delete"
-          disabled={loading || submitting}
+          disabled={loading}
         />
       }
     >
-      {!loading && data.order && (
-        <HomeOrderDetailView setSubmitting={setSubmitting} order={data.order} />
+      {data && (
+        <HomeOrderDetailView setSubmitting={setLoading} order={data} />
       )}
     </ScreenScrollView>
   );

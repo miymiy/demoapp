@@ -47,18 +47,6 @@ const Amount = styled(TextBody)`
   color: ${color.midGrey};
 `;
 
-export const OrderItemFragment = `
-  fragment OrderItem on Order {
-    id
-    name
-    number
-    amount
-    currency
-    image
-    status
-  }
-`;
-
 type Props = {
   order: Order;
 };
